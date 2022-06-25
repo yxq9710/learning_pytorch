@@ -5,7 +5,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from config import Config
 from lenet5 import LeNet5
-from resnet19 import ResNet19
+from learning_pytorch.resnet19 import ResNet19
 
 cfg = Config()
 
