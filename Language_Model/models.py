@@ -41,3 +41,33 @@ class RNNLM(nn.Module):
         out = self.output(hidden)
         probs = F.log_softmax(out, dim=2)  # 也可以用 dim=-1
         return probs
+
+
+class CBOW(nn.Module):
+    """
+    连续词袋模型，通过上下文预测中心词
+    """
+    def __init__(self, vocab_size, embedding_dim):
+        super(CBOW, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.output = nn.Linear(embedding_dim, vocab_size)
+
+    def forward(self, inputs):
+        embedding = self.embedding(inputs)
+        hidden = embedding.mean(dim=1)
+        out = self.output(hidden)
+        probs = F.log_softmax(out, dim=1)
+        return probs
+
+
+class Skip_Gram(nn.Module):
+    def __init__(self, vocab_size, embedding_dim):
+        super(Skip_Gram, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.output = nn.Linear(embedding_dim, vocab_size)
+
+    def forward(self, inputs):
+        embedding = self.embedding(inputs)
+        out = self.output(embedding)
+        probs = F.log_softmax(out, dim=1)
+        return probs

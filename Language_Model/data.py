@@ -87,3 +87,59 @@ class RNNDataSet(Dataset):
         inputs = pad_sequence(inputs, batch_first=True, padding_value=self.pad)
         targets = pad_sequence(targets, batch_first=True, padding_value=self.pad)
         return inputs, targets
+
+
+class CBOWDataSet(Dataset):
+    def __init__(self, corpus, vocab, window_size=2):
+        self.data = []
+        self.bos = vocab[cfg.BOS_TOKEN]
+        self.eos = vocab[cfg.EOS_TOKEN]
+        self.pad = vocab[cfg.PAD_TOKEN]
+
+        for sentence in tqdm(corpus, desc='Dataset Construction'):
+            sentence = [self.bos] + sentence + [self.eos]
+            if len(sentence) < window_size:
+                continue
+            for i in range(window_size, len(sentence) - window_size):
+                input = sentence[i-window_size: i] + sentence[i+1: i+1+window_size]
+                target = sentence[i]
+                self.data.append((input, target))
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def collate_fn(self, examples):
+        inputs = [torch.tensor(ex[0]) for ex in examples]
+        targets = torch.tensor([ex[1] for ex in examples], dtype=torch.long)
+        inputs = pad_sequence(inputs, batch_first=True, padding_value=self.pad)
+        return inputs, targets
+
+
+class SKip_GramDataSet(Dataset):
+    def __init__(self, corpus, vocab, window_size=2):
+        self.data = []
+        self.bos = vocab[cfg.BOS_TOKEN]
+        self.eos = vocab[cfg.EOS_TOKEN]
+        self.pad = vocab[cfg.PAD_TOKEN]
+
+        for sentence in tqdm(corpus, desc="Dataset Construction"):
+            sentence = [self.bos] + sentence + [self.eos]
+            for i in range(1, len(sentence) - 1):
+                input = sentence[i]
+                contexts = sentence[max(0, i-window_size): i] + sentence[i+1: min(len(sentence), i+1+window_size)]
+                for context in contexts:
+                    self.data.append((input, context))
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def collate_fn(self, examples):
+        inputs = torch.tensor([ex[0] for ex in examples], dtype=torch.long)
+        targets = torch.tensor([ex[1] for ex in examples], dtype=torch.long)
+        return inputs, targets
